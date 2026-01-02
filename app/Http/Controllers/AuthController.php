@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\UserProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -11,28 +12,44 @@ use Laravel\Sanctum\PersonalAccessToken;
 class AuthController extends Controller
 {
     public function signup(Request $request)
-    {
-        // Validate request
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
-        ]);
 
-        // Create user
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+{{
+    $data = $request->validate([
+        'email' => 'required|email|unique:authusers,email',
+        'password' => 'required|string|min:6',
+        'role' => 'required|in:client,freelancer,admin',
 
-        // Response
-        return response()->json([
-            'status' => true,
-            'message' => 'User registered successfully',
-            'data' => $user,
-        ], 201);
-    }
+        // profile fields
+        'name' => 'required|string|max:255',
+        'profile_image' => 'nullable|string',
+        'skills' => 'nullable|string',
+        'portfolio' => 'nullable|string',
+    ]);
+
+    // 1️⃣ Create authuser
+    $user = User::create([
+        'email' => $data['email'],
+        'password' => Hash::make($data['password']),
+        'role' => $data['role'],
+    ]);
+
+    // 2️⃣ Create profile with SAME user_id
+    $profile = UserProfile::create([
+        'user_id' => $user->id, // same id
+        'name' => $data['name'],
+        'profile_image' => $data['profile_image'] ?? null,
+        'skills' => $data['skills'] ?? null,
+        'portfolio' => $data['portfolio'] ?? null,
+    ]);
+
+    return response()->json([
+        'status' => true,
+        'message' => 'User registered successfully',
+        'user' => $user,
+        'profile' => $profile,
+    ], 201);
+}
+}
 
     public function login(Request $request)
     {
@@ -85,4 +102,16 @@ class AuthController extends Controller
             'abilities' => $accessToken->abilities,
         ]);
     }
+
+     public function logout(Request $request)
+    {
+    // Delete the current access token
+    $request->user()->currentAccessToken()->delete();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Logged out successfully',
+    ], 200);
+    }
+
 }
