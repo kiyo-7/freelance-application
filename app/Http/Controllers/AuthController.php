@@ -11,9 +11,9 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
-    public function signup(Request $request)
-
-{{
+ public function signup(Request $request)
+{
+    // Validate request
     $data = $request->validate([
         'email' => 'required|email|unique:authusers,email',
         'password' => 'required|string|min:6',
@@ -21,26 +21,37 @@ class AuthController extends Controller
 
         // profile fields
         'name' => 'required|string|max:255',
-        'profile_image' => 'nullable|string',
+        'profile_image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
         'skills' => 'nullable|string',
         'portfolio' => 'nullable|string',
     ]);
 
-    // 1️⃣ Create authuser
+    // 1️⃣ Handle profile image upload
+    if ($request->hasFile('profile_image')) {
+        $path = $request->file('profile_image')->store('profile_images', 'public');
+        $data['profile_image'] = $path;
+    }
+
+    // 2️⃣ Create authuser
     $user = User::create([
         'email' => $data['email'],
         'password' => Hash::make($data['password']),
         'role' => $data['role'],
     ]);
 
-    // 2️⃣ Create profile with SAME user_id
+    // 3️⃣ Create profile with SAME user_id
     $profile = UserProfile::create([
-        'user_id' => $user->id, // same id
+        'user_id' => $user->id,
         'name' => $data['name'],
         'profile_image' => $data['profile_image'] ?? null,
         'skills' => $data['skills'] ?? null,
         'portfolio' => $data['portfolio'] ?? null,
     ]);
+
+    // 4️⃣ Add full URL for profile_image
+    if ($profile->profile_image) {
+        $profile->image_url = url('storage/' . $profile->profile_image);
+    }
 
     return response()->json([
         'status' => true,
@@ -49,7 +60,7 @@ class AuthController extends Controller
         'profile' => $profile,
     ], 201);
 }
-}
+
 
     public function login(Request $request)
     {

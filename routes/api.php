@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\ProjectController; 
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\PaymentController;
 
 
 Route::post('/signup', [AuthController::class, 'signup']);
@@ -24,4 +26,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/projects/{project}/messages', [MessageController::class, 'index']);
     Route::post('/projects/{project}/messages', [MessageController::class, 'store']);
     Route::get('/messages/{message}', [MessageController::class, 'show']);
+
+    Route::get('/projects/{project}/reviews', [ReviewController::class, 'index']);
+    Route::post('/projects/{project}/reviews', [ReviewController::class, 'store']);
+    Route::get('/reviews/{review}', [ReviewController::class, 'show']);
+
+    Route::get('/projects/{project}/payments', [PaymentController::class, 'index']);
+    Route::post('/projects/{project}/payments', [PaymentController::class, 'store']);
+    Route::get('/payments/{payment}', [PaymentController::class, 'show']);
 });
