@@ -54,6 +54,8 @@ class AuthController extends Controller
         $profile->image_url = url('storage/' . $profile->profile_image);
     }
 
+    $token = $request->user()->createToken('auth_token')->plainTextToken;
+
     return response()->json([
         'status' => true,
         'message' => 'User registered successfully',
