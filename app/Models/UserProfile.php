@@ -13,6 +13,11 @@ class UserProfile extends Model
         'skills',
         'portfolio',
         'rating',
+        'professional_title',   // new
+        'city',                 // new
+        'bio',                  // new
+        'hourly_rate',           // new
+        'is_profile_complete',  // new
     ];
 
     public function user()

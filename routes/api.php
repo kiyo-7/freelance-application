@@ -28,7 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/messages/{message}', [MessageController::class, 'show']);
 
     Route::get('/projects/{project}/reviews', [ReviewController::class, 'index']);
-    Route::post('/projects/{project}/reviews', [ReviewController::class, 'store']);
+    Route::post('/projects/{project}/reviews', [ReviewController::class,'store']);
     Route::get('/reviews/{review}', [ReviewController::class, 'show']);
 
     Route::get('/projects/{project}/payments', [PaymentController::class, 'index']);

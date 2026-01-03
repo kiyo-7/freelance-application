@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -59,12 +60,14 @@ class AuthController extends Controller
         'user' => $user,
         'profile' => $profile,
     ], 201);
+    
 }
 
 
     public function login(Request $request)
     {
         // Validate request
+   Log::info('Login email:', ['email' => $request]);
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',

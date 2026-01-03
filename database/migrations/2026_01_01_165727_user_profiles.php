@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('user_profiles', function (Blueprint $table) {
             $table->id();
+
             $table->foreignId('user_id')
                   ->unique()
                   ->constrained('authusers')
@@ -20,7 +21,16 @@ return new class extends Migration
 
             $table->string('name');
             $table->string('profile_image')->nullable(); // image path or URL
-            $table->text('skills')->nullable();
+
+            // ✅ Added fields
+            $table->string('professional_title')->nullable();
+            $table->string('city')->nullable();
+            $table->text('bio')->nullable();
+            $table->decimal('hourly_rate', 8, 2)->nullable();
+            $table->boolean('is_profile_complete')->default(false);
+
+            // Existing fields
+            $table->text('skills')->nullable(); // comma-separated or JSON
             $table->text('portfolio')->nullable();
             $table->decimal('rating', 2, 1)->default(0);
 

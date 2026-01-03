@@ -50,6 +50,11 @@ class UserProfileController extends Controller
             'profile_image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             'skills' => 'nullable|string',
             'portfolio' => 'nullable|string',
+            'professional_title' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'bio' => 'nullable|string',
+            'hourly_rate' => 'nullable|numeric|min:0',
+            'is_profile_complete' => 'nullable|boolean',
         ]);
 
         // Handle profile image upload
@@ -58,7 +63,10 @@ class UserProfileController extends Controller
             $data['profile_image'] = $path;
         }
 
-        $profile = UserProfile::create(array_merge($data, ['user_id' => $user->id]));
+        $profile = UserProfile::create(array_merge($data, [
+            'user_id' => $user->id,
+            'is_profile_complete' => $data['is_profile_complete'] ?? true, // default to true if not sent
+        ]));
 
         if ($profile->profile_image) {
             $profile->image_url = url('storage/' . $profile->profile_image);
@@ -86,6 +94,11 @@ class UserProfileController extends Controller
             'profile_image' => 'sometimes|nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             'skills' => 'sometimes|nullable|string',
             'portfolio' => 'sometimes|nullable|string',
+            'professional_title' => 'sometimes|nullable|string|max:255',
+            'city' => 'sometimes|nullable|string|max:255',
+            'bio' => 'sometimes|nullable|string',
+            'hourly_rate' => 'sometimes|nullable|numeric|min:0',
+            'is_profile_complete' => 'sometimes|boolean',
         ]);
 
         // Handle image upload
