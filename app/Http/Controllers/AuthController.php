@@ -68,7 +68,7 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        // Validate request
+        // Validate requesth
    Log::info('Login email:', ['email' => $request]);
         $request->validate([
             'email' => 'required|email',
