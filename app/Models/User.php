@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -10,32 +9,50 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable,HasApiTokens;
-        protected $table = 'authusers';
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    use HasApiTokens, HasFactory, Notifiable;
+
+    // -------------------------
+    // Mass assignable
+    // -------------------------
     protected $fillable = [
         'email',
         'password',
         'role',
+        'is_verified',
     ];
 
+    // -------------------------
+    // Hidden fields
+    // -------------------------
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    // Relationships
+    // -------------------------
+    // Casts
+    // -------------------------
+    protected $casts = [
+        'is_verified' => 'boolean',
+        'email_verified_at' => 'datetime',
+    ];
 
-    public function profile()
+    // -------------------------
+    // Role-based profiles
+    // -------------------------
+    public function clientProfile()
     {
-        return $this->hasOne(UserProfile::class);
+        return $this->hasOne(ClientProfile::class);
     }
 
+    public function freelancerProfile()
+    {
+        return $this->hasOne(FreelancerProfile::class);
+    }
+
+    // -------------------------
+    // Other relationships
+    // -------------------------
     public function projects()
     {
         return $this->hasMany(Project::class, 'client_id');
