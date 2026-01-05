@@ -3,74 +3,102 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\UserProfile;
+use App\Models\ClientProfile;
+use App\Models\FreelancerProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
- public function signup(Request $request)
+    /**
+     * SIGN UP
+     */
+    public function signup(Request $request)
+    
 {
-    // Validate request
-    $data = $request->validate([
-        'email' => 'required|email|unique:authusers,email',
-        'password' => 'required|string|min:6',
-        'role' => 'required|in:client,freelancer,admin',
+    Log::info('Signup attempt', $request->all());
 
-        // profile fields
+    $data = $request->validate([
+        'email' => 'required|email|unique:users,email',
+        'password' => 'required|string|min:6',
+        'role' => 'required|in:client,freelancer',
+
         'name' => 'required|string|max:255',
-        'profile_image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-        'skills' => 'nullable|string',
-        'portfolio' => 'nullable|string',
+        'location' => 'nullable|string',
+
+        // freelancer-only
+        'professional_title' => 'nullable|string',
+        'bio' => 'nullable|string',
+        'years_of_experience' => 'nullable|integer|min:0',
+
+        // image
+        'avatar' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
     ]);
 
-    // 1️⃣ Handle profile image upload
-    if ($request->hasFile('profile_image')) {
-        $path = $request->file('profile_image')->store('profile_images', 'public');
-        $data['profile_image'] = $path;
+    /** Upload avatar if provided */
+    $avatarPath = null;
+    if ($request->hasFile('avatar')) {
+        $avatarPath = $request->file('avatar')->store('avatars', 'public');
     }
 
-    // 2️⃣ Create authuser
+    /** 1️⃣ Create user (numeric ID auto-increment) */
     $user = User::create([
         'email' => $data['email'],
         'password' => Hash::make($data['password']),
         'role' => $data['role'],
     ]);
 
-    // 3️⃣ Create profile with SAME user_id
-    $profile = UserProfile::create([
-        'user_id' => $user->id,
-        'name' => $data['name'],
-        'profile_image' => $data['profile_image'] ?? null,
-        'skills' => $data['skills'] ?? null,
-        'portfolio' => $data['portfolio'] ?? null,
-    ]);
-
-    // 4️⃣ Add full URL for profile_image
-    if ($profile->profile_image) {
-        $profile->image_url = url('storage/' . $profile->profile_image);
+    /** 2️⃣ Create profile based on role — numeric FK only */
+    if ($user->role === 'client') {
+        ClientProfile::create([
+            'user_id' => $user->id, // numeric FK
+            'full_name' => $data['name'],
+            'location' => $data['location'] ?? null,
+            'avatar_url' => $avatarPath ? url('storage/' . $avatarPath) : null,
+        ]);
     }
+
+    if ($user->role === 'freelancer') {
+        FreelancerProfile::create([
+            'user_id' => $user->id, // numeric FK
+            'full_name' => $data['name'],
+            'professional_title' => $data['professional_title'] ?? '',
+            'location' => $data['location'] ?? '',
+            'bio' => $data['bio'] ?? '',
+            'years_of_experience' => $data['years_of_experience'] ?? 0,
+            'response_time' => '24h',
+            'avatar_url' => $avatarPath ? url('storage/' . $avatarPath) : null,
+        ]);
+    }
+
+    /** 3️⃣ Create token */
+    $token = $user->createToken('auth_token')->plainTextToken;
 
     return response()->json([
         'status' => true,
         'message' => 'User registered successfully',
-        'user' => $user,
-        'profile' => $profile,
+        'token' => $token,
+        'token_type' => 'Bearer',
+        'user' => $user->load(['clientProfile', 'freelancerProfile']),
     ], 201);
 }
 
 
+    /**
+     * LOGIN
+     */
     public function login(Request $request)
     {
-        // Validate request
+        Log::info('Login attempt', ['email' => $request->email]);
+
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
-        // Attempt login
         if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json([
                 'status' => false,
@@ -78,51 +106,59 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Get authenticated user
         $user = Auth::user();
-            $token = $request->user()->createToken('auth_token')->plainTextToken;
+        $token = $request->user()->createToken('auth_token')->plainTextToken;
+
+
         return response()->json([
             'status' => true,
             'message' => 'Login successful',
             'token' => $token,
             'token_type' => 'Bearer',
-            'data' => $user,
+            'user' => $user,
         ], 200);
     }
 
-     public function validateToken(Request $request)
+    /**
+     * VALIDATE TOKEN
+     */
+    public function validateToken(Request $request)
     {
-        // Extract token from Authorization header
         $token = $request->bearerToken();
 
         if (!$token) {
-            return response()->json(['valid' => false, 'message' => 'No token provided'], 401);
+            return response()->json([
+                'valid' => false,
+                'message' => 'No token provided'
+            ], 401);
         }
 
-        // Find the token in database
         $accessToken = PersonalAccessToken::findToken($token);
 
         if (!$accessToken) {
-            return response()->json(['valid' => false, 'message' => 'Invalid token'], 401);
+            return response()->json([
+                'valid' => false,
+                'message' => 'Invalid token'
+            ], 401);
         }
 
-        // Return token info and associated user
         return response()->json([
             'valid' => true,
-            'user' => $accessToken->tokenable,
+            'user' => $accessToken->tokenable->load(['clientProfile', 'freelancerProfile']),
             'abilities' => $accessToken->abilities,
         ]);
     }
 
-     public function logout(Request $request)
+    /**
+     * LOGOUT
+     */
+    public function logout(Request $request)
     {
-    // Delete the current access token
-    $request->user()->currentAccessToken()->delete();
+        $request->user()->currentAccessToken()->delete();
 
-    return response()->json([
-        'status' => true,
-        'message' => 'Logged out successfully',
-    ], 200);
+        return response()->json([
+            'status' => true,
+            'message' => 'Logged out successfully',
+        ]);
     }
-
 }

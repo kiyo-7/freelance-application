@@ -12,6 +12,16 @@ class Project extends Model
         'description',
         'budget',
         'status',
+        'client_name',      // new
+        'location',         // new
+        'posted_at',        // new
+        'category_badge',   // new
+    ];
+
+    // Automatically cast 'posted_at' to Carbon datetime
+    protected $casts = [
+        'posted_at' => 'datetime',
+        'budget' => 'decimal:2',
     ];
 
     public function client()

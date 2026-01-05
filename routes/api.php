@@ -2,7 +2,8 @@
 
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserProfileController;
+use App\Http\Controllers\ClientProfileController;
+use App\Http\Controllers\FreelancerProfileController;
 use App\Http\Controllers\ProjectController; 
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ReviewController;
@@ -16,8 +17,11 @@ Route::get('/validate-token', [AuthController::class, 'validateToken']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    Route::get('/profile', [UserProfileController::class, 'show']);
-    Route::put('/profile', [UserProfileController::class, 'update']);
+    Route::get('/client/profile', [ClientProfileController::class, 'show']);
+    Route::put('/client/profile', [ClientProfileController::class, 'update']);
+
+    Route::get('/freelancer/profile', [FreelancerProfileController::class, 'show']);
+    Route::put('/freelancer/profile', [FreelancerProfileController::class, 'update']);
 
     Route::get('/projects', [ProjectController::class, 'index']);
     Route::post('/projects', [ProjectController::class, 'store']);
@@ -28,7 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/messages/{message}', [MessageController::class, 'show']);
 
     Route::get('/projects/{project}/reviews', [ReviewController::class, 'index']);
-    Route::post('/projects/{project}/reviews', [ReviewController::class, 'store']);
+    Route::post('/projects/{project}/reviews', [ReviewController::class,'store']);
     Route::get('/reviews/{review}', [ReviewController::class, 'show']);
 
     Route::get('/projects/{project}/payments', [PaymentController::class, 'index']);
