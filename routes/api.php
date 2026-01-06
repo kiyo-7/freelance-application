@@ -7,6 +7,7 @@ use App\Http\Controllers\FreelancerProfileController;
 use App\Http\Controllers\ProjectController; 
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\PaymentController;
 
 
@@ -38,4 +39,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/projects/{project}/payments', [PaymentController::class, 'index']);
     Route::post('/projects/{project}/payments', [PaymentController::class, 'store']);
     Route::get('/payments/{payment}', [PaymentController::class, 'show']);
+
+    Route::get('/freelancer/services', [ServiceController::class, 'index']);
+    Route::post('/freelancer/services', [ServiceController::class, 'store']);
+    Route::put('/freelancer/services/{id}/status', [ServiceController::class, 'updateStatus']);
+    Route::delete('/freelancer/services/{id}', [ServiceController::class, 'destroy']);
 });
