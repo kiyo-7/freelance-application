@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ProjectController extends Controller
 {
@@ -21,6 +22,8 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
+       Log::info(' body is: ' . $request->getContent());
+
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',

@@ -57,6 +57,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(Project::class, 'client_id');
     }
+    
+    public function proposals()
+{
+    return $this->hasMany(Proposal::class, 'freelancer_id');
+}
 
     public function applications()
     {

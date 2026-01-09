@@ -9,6 +9,7 @@ class Project extends Model
     protected $fillable = [
         'client_id',
         'title',
+        'freelancer_id',
         'description',
         'budget',
         'status',
@@ -48,4 +49,15 @@ class Project extends Model
     {
         return $this->hasMany(Review::class);
     }
+    public function proposals()
+{
+    return $this->hasMany(Proposal::class);
+}
+
+public function freelancer()
+{
+    return $this->belongsTo(User::class, 'freelancer_id');
+}
+
+
 }

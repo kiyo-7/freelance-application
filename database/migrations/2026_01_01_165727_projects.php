@@ -23,8 +23,13 @@ return new class extends Migration
             // ✅ Added missing fields
             $table->string('client_name');
             $table->string('location')->nullable();
-            $table->timestamp('posted_at')->useCurrent(); // default to current timestamp
+            $table->timestamp('posted_at')->useCurrent(); 
             $table->string('category_badge')->nullable();
+
+            $table->foreignId('freelancer_id')
+          ->nullable()
+          ->constrained('users')
+          ->nullOnDelete();
 
             $table->timestamps();
         });
