@@ -97,4 +97,13 @@ class User extends Authenticatable
     {
         return $this->hasMany(Payment::class, 'payee_id');
     }
+    public function favoriteProjects()
+{
+    return $this->belongsToMany(
+        Project::class,
+        'favorite_projects',
+        'freelancer_id',
+        'project_id'
+    )->withTimestamps();
+}
 }

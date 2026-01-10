@@ -14,7 +14,9 @@ class ProjectController extends Controller
      */
     public function index()
     {
+          Log::info(' Fetching all projects');
         return Project::with('client')->latest()->get();
+        return response()->json(['data' => $projects]);
     }
 
     /**
@@ -22,7 +24,6 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-       Log::info(' body is: ' . $request->getContent());
 
         $data = $request->validate([
             'title' => 'required|string|max:255',
@@ -37,7 +38,7 @@ class ProjectController extends Controller
 
         // Required relations
         $data['client_id'] = $user->id;
-        $data['client_name'] = $user->name ?? 'Client'; // fallback if name missing
+        $data['client_name'] = $user->name ?? 'Client'; // fallback if name 
 
         // Default posted_at to now if not provided
         $data['posted_at'] = $data['posted_at'] ?? now();

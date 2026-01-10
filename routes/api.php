@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClientProfileController;
 use App\Http\Controllers\FreelancerProfileController;
 use App\Http\Controllers\ProjectController; 
-use App\Http\Controllers\MessageController;
+use App\Http\Controllers\FavoriteProjectController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\PaymentController;
@@ -66,5 +66,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 
-    
+    //favorite job routes
+    Route::get('/favorites', [FavoriteProjectController::class, 'index']);
+    Route::post('/favorites', [FavoriteProjectController::class, 'store']);
+    Route::delete('/favorites/{projectId}', [FavoriteProjectController::class, 'destroy']);
+    Route::get('/favorites/{projectId}/check', [FavoriteProjectController::class, 'isFavorited']);
 });

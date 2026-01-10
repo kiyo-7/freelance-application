@@ -59,5 +59,15 @@ public function freelancer()
     return $this->belongsTo(User::class, 'freelancer_id');
 }
 
+public function favoritedBy()
+{
+    return $this->belongsToMany(
+        User::class,
+        'favorite_projects',
+        'project_id',
+        'freelancer_id'
+    );
+}
+
 
 }
