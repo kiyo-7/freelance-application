@@ -38,6 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //chat routes
     Route::get('/conversations', [ChatController::class, 'index']);
+    Route::post('/conversations/{freelancer}', [ChatController::class, 'create']);
+    Route::delete('/conversations/{conversation}', [ChatController::class, 'destroy']);
     Route::get('/conversations/{conversation}/messages', [ChatController::class, 'messages']);
     Route::post('/conversations/{conversation}/messages', [ChatController::class, 'sendMessage']);
 

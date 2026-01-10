@@ -63,10 +63,6 @@ class User extends Authenticatable
     return $this->hasMany(Proposal::class, 'freelancer_id');
 }
 
-    public function applications()
-    {
-        return $this->hasMany(Application::class, 'freelancer_id');
-    }
 
     public function sentMessages()
     {
