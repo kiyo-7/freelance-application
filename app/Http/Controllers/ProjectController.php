@@ -9,6 +9,14 @@ use Illuminate\Support\Facades\Log;
 
 class ProjectController extends Controller
 {
+
+
+    public function index_all()
+    {
+        $projects = Project::with('client')->latest()->get();
+        return response()->json(['data' => $projects]);
+    }
+
     /**
      * List all projects with client info
      */

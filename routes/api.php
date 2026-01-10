@@ -25,11 +25,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/client/profile', [ClientProfileController::class, 'show']);
     Route::put('/client/profile', [ClientProfileController::class, 'update']);
     //freelancer routes
+    Route::get('/freelancer/all', [FreelancerProfileController::class, 'index_all']);
     Route::get('/freelancer/profile', [FreelancerProfileController::class, 'show']);
     Route::put('/freelancer/profile', [FreelancerProfileController::class, 'update']);
    
     //project routes
     Route::get('/projects', [ProjectController::class, 'index']);
+    Route::get('/projects/all', [ProjectController::class, 'index_all']);
     Route::post('/projects', [ProjectController::class, 'store']);
     Route::get('/projects/{project}', [ProjectController::class, 'show']);
 
@@ -50,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //services
     Route::get('/freelancer/services', [ServiceController::class, 'index']);
+    Route::get('/freelancer/services/all', [ServiceController::class, 'index_all']);
     Route::post('/freelancer/services', [ServiceController::class, 'store']);
     Route::put('/freelancer/services/{id}/status', [ServiceController::class, 'updateStatus']);
     Route::delete('/freelancer/services/{id}', [ServiceController::class, 'destroy']);

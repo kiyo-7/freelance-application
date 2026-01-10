@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\Log;
 
 class ServiceController extends Controller
 {
+
+    public function index_all()
+    {
+        $services = Service::with('user')->latest()->get();
+        return response()->json(['data' => $services]);
+    }
+    
     /* =============================
        GET /freelancer/services
     ============================== */
