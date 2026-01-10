@@ -12,6 +12,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\FavoriteServiceController;
 
 
 
@@ -74,4 +75,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/favorites', [FavoriteProjectController::class, 'store']);
     Route::delete('/favorites/{projectId}', [FavoriteProjectController::class, 'destroy']);
     Route::get('/favorites/{projectId}/check', [FavoriteProjectController::class, 'isFavorited']);
+
+    //favorite service routes
+      Route::get('/services/favorites', [FavoriteServiceController::class, 'indexFavorites']);
+    Route::post('/services/{serviceId}', [FavoriteServiceController::class, 'toggle']);
 });

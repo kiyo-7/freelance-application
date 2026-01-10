@@ -106,4 +106,14 @@ class User extends Authenticatable
         'project_id'
     )->withTimestamps();
 }
+public function favoriteServices()
+{
+    return $this->belongsToMany(
+        Service::class,
+        'favorite_services',
+        'user_id',
+        'service_id'
+    )->withTimestamps();
+}
+
 }
