@@ -67,4 +67,21 @@ class ProjectController extends Controller
     {
         return $project->load('applications.freelancer', 'client');
     }
+
+    /**
+     * Show all projects of the authenticated client
+     */
+    public function myProjects()
+{
+    $user = Auth::user();
+
+    $projects = Project::with('client')
+        ->where('client_id', $user->id)
+        ->latest()
+        ->get();
+
+    return response()->json([
+        'data' => $projects
+    ]);
+}
 }

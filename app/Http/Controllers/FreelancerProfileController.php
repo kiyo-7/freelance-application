@@ -92,4 +92,21 @@ class FreelancerProfileController extends Controller
             'profile' => $profile,
         ]);
     }
+    public function showById($id)
+{
+    $profile = FreelancerProfile::with([
+        'user:id,email',
+        'services' 
+    ])->find($id);
+
+    if (! $profile) {
+        return response()->json(['message' => 'Not found'], 404);
+    }
+
+    return response()->json([
+        'data' => $profile
+    ]);
+}
+
+
 }
