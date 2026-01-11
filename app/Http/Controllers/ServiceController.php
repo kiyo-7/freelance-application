@@ -10,11 +10,27 @@ use Illuminate\Support\Facades\Log;
 class ServiceController extends Controller
 {
 
-    public function index_all()
-    {
-        $services = Service::with('user')->latest()->get();
-        return response()->json(['data' => $services]);
-    }
+public function index_all()
+{
+    $userId = Auth::id(); // null if guest
+
+    $services = Service::query()
+        ->with('user')
+        ->latest()
+        ->when($userId, function ($query) use ($userId) {
+            $query->withExists([
+                'favoritedBy as is_favorited' => fn ($q) =>
+                    $q->where('user_id', $userId)
+            ]);
+        })
+        ->get();
+
+    return response()->json([
+        'status' => 200,
+        'data' => $services
+    ]);
+}
+
     
     /* =============================
        GET /freelancer/services

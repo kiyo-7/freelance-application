@@ -10,11 +10,16 @@ use Illuminate\Support\Facades\Log;
 class FreelancerProfileController extends Controller
 {
 
-    public function index()
+    public function index_all()
     {
         // fetching all freelancers
         $freelancers = FreelancerProfile::with('user')->get();
-        return response()->json(['data' => $freelancers]);
+
+        Log::info(' Fetching all freelancers');
+        Log::info(' Freelancers data: ' . json_encode($freelancers));
+        return response()->json([
+        'status' => 200,
+        'data' => $freelancers]);
         
     }
 
