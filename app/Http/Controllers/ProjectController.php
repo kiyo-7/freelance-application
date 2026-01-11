@@ -69,13 +69,15 @@ class ProjectController extends Controller
     }
 
     /**
-     * Show all projects of the authenticated client
-     */
-    public function myProjects()
+ * Show all projects of the authenticated client
+ */
+public function myProjects()
 {
     $user = Auth::user();
 
+    // Fetch projects with client and count of proposals
     $projects = Project::with('client')
+        ->withCount('proposals') // <-- adds proposals_count
         ->where('client_id', $user->id)
         ->latest()
         ->get();
@@ -84,4 +86,5 @@ class ProjectController extends Controller
         'data' => $projects
     ]);
 }
+
 }
