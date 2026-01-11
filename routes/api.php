@@ -26,7 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/client/profile', [ClientProfileController::class, 'show']);
     Route::put('/client/profile', [ClientProfileController::class, 'update']);
     //freelancer routes
-    Route::get('/freelancer/all', [FreelancerProfileController::class, 'index']);
+    Route::get('/freelancer/all', [FreelancerProfileController::class, 'index_all']);
     Route::get('/freelancer/profile', [FreelancerProfileController::class, 'show']);
     Route::put('/freelancer/profile', [FreelancerProfileController::class, 'update']);
    
@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/projects/all', [ProjectController::class, 'index_all']);
     Route::post('/projects', [ProjectController::class, 'store']);
     Route::get('/projects/{project}', [ProjectController::class, 'show']);
+    Route::get('/client/projects', [ProjectController::class, 'myProjects']);
 
     //chat routes
     Route::get('/conversations', [ChatController::class, 'index']);
@@ -63,7 +64,6 @@ Route::middleware('auth:sanctum')->group(function () {
     //proposals
     Route::post('/projects/{project}/proposals', [ProposalController::class, 'store']);
     Route::get('/projects/{project}/proposals', [ProposalController::class, 'index']);
-    Route::get('/client/projects', [ProjectController::class, 'myProjects']);
     
 
     Route::post('/proposals/{proposal}/accept', [ProposalController::class, 'accept']);
