@@ -63,10 +63,6 @@ class User extends Authenticatable
     return $this->hasMany(Proposal::class, 'freelancer_id');
 }
 
-    public function applications()
-    {
-        return $this->hasMany(Application::class, 'freelancer_id');
-    }
 
     public function sentMessages()
     {
@@ -106,4 +102,14 @@ class User extends Authenticatable
         'project_id'
     )->withTimestamps();
 }
+public function favoriteServices()
+{
+    return $this->belongsToMany(
+        Service::class,
+        'favorite_services',
+        'user_id',
+        'service_id'
+    )->withTimestamps();
+}
+
 }

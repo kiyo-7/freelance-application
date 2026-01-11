@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class ChatController extends Controller
 {
-    // Get all conversations for the logged-in user
+    /* ==================================================
+       GET /conversations
+       List all conversations (chat list)
+    ================================================== */
     public function index()
         {
             $user = Auth::user();
@@ -53,7 +55,51 @@ class ChatController extends Controller
     return response()->json($result);
 }
 
-    // Get all messages in a conversation
+    /* ==================================================
+       POST /conversations/{freelancer}
+       Create or get a conversation
+    ================================================== */
+    public function create($freelancerId)
+    {
+        $user = Auth::user();
+
+        if ($user->role !== 'client') {
+            return response()->json(['message' => 'Only clients can start conversations'], 403);
+        }
+
+        $freelancer = User::where('id', $freelancerId)
+            ->where('role', 'freelancer')
+            ->firstOrFail();
+
+        $conversation = Conversation::firstOrCreate([
+            'client_id' => $user->id,
+            'freelancer_id' => $freelancer->id,
+        ]);
+
+        return response()->json($conversation, 201);
+    }
+
+    /* ==================================================
+       DELETE /conversations/{conversation}
+       Delete a conversation
+    ================================================== */
+    public function destroy(Conversation $conversation)
+    {
+        $user = Auth::user();
+
+        if (!in_array($user->id, [$conversation->client_id, $conversation->freelancer_id])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $conversation->delete();
+
+        return response()->json(['message' => 'Conversation deleted']);
+    }
+
+    /* ==================================================
+       GET /conversations/{conversation}/messages
+       Get all messages
+    ================================================== */
     public function messages(Conversation $conversation)
 {
         $user = Auth::user();
@@ -132,7 +178,9 @@ class ChatController extends Controller
             'file_size' => 'nullable|integer',
         ]);
 
-        $senderRole = $conversation->client_id == $user->id ? 'client' : 'freelancer';
+        $senderRole = $conversation->client_id === $user->id
+            ? 'client'
+            : 'freelancer';
 
         $message = Message::create([
             'conversation_id' => $conversation->id,
@@ -147,20 +195,22 @@ class ChatController extends Controller
             'timestamp' => now(),
         ]);
 
-        // Update last message & unread counters
+        // Update conversation preview + unread
         $conversation->last_message = $message->content ?: ($message->file_name ?? 'Attachment');
         $conversation->last_message_time = now();
+
         if ($senderRole === 'client') {
-            $conversation->freelancer_unread += 1;
+            $conversation->freelancer_unread++;
         } else {
-            $conversation->client_unread += 1;
+            $conversation->client_unread++;
         }
+
         $conversation->save();
 
         return response()->json([
-            'id' => (string)$message->id,
-            'conversationId' => (string)$conversation->id,
-            'senderId' => (string)$message->sender_id,
+            'id' => (string) $message->id,
+            'conversationId' => (string) $conversation->id,
+            'senderId' => (string) $message->sender_id,
             'senderRole' => $message->sender_role,
             'content' => $message->content,
             'timestamp' => $message->timestamp->toIso8601String(),

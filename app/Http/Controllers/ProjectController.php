@@ -14,7 +14,9 @@ class ProjectController extends Controller
     public function index_all()
     {
         $projects = Project::with('client')->latest()->get();
-        return response()->json(['data' => $projects]);
+        return response()->json([
+            'status' => 200,
+            'data' => $projects]);
     }
 
     /**
