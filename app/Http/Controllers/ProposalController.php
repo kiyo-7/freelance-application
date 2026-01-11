@@ -65,8 +65,11 @@ class ProposalController extends Controller
         }
 
         return response()->json([
-            'data' => $project->proposals()->latest()->get(),
-        ]);
+            'data' => $project->proposals()
+            ->with('freelancer.freelancerProfile')
+            ->latest()
+            ->get(),
+]);
     }
 
     /**
