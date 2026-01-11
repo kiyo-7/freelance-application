@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class FreelancerProfile extends Model
 {
-
     protected $fillable = [
         'user_id',
         'full_name',
@@ -34,6 +33,11 @@ class FreelancerProfile extends Model
         'is_online' => 'boolean',
         'is_verified' => 'boolean',
         'rating' => 'float',
+        'total_reviews' => 'integer',
+        'completed_jobs' => 'integer',
+        'years_of_experience' => 'integer',
+        'hourlyRate' => 'float',
+
         'languages' => 'array',
         'skills' => 'array',
         'services' => 'array',
@@ -41,7 +45,10 @@ class FreelancerProfile extends Model
         'reviews' => 'array',
         'rating_distribution' => 'array',
     ];
-
+    public function services()
+    {
+    return $this->hasMany(Service::class, 'user_id', 'user_id');
+    }
     // Relationships
     public function user()
     {

@@ -26,7 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/client/profile', [ClientProfileController::class, 'show']);
     Route::put('/client/profile', [ClientProfileController::class, 'update']);
     //freelancer routes
-    Route::get('/freelancer/all', [FreelancerProfileController::class, 'index_all']);
+    Route::get('/freelancer/all', [FreelancerProfileController::class, 'index']);
     Route::get('/freelancer/profile', [FreelancerProfileController::class, 'show']);
     Route::put('/freelancer/profile', [FreelancerProfileController::class, 'update']);
    
@@ -38,8 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //chat routes
     Route::get('/conversations', [ChatController::class, 'index']);
-    Route::post('/conversations/{freelancer}', [ChatController::class, 'create']);
-    Route::delete('/conversations/{conversation}', [ChatController::class, 'destroy']);
+    Route::post('/conversations', [ChatController::class, 'createConversation']);
     Route::get('/conversations/{conversation}/messages', [ChatController::class, 'messages']);
     Route::post('/conversations/{conversation}/messages', [ChatController::class, 'sendMessage']);
 
@@ -56,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //services
     Route::get('/freelancer/services', [ServiceController::class, 'index']);
     Route::get('/freelancer/services/all', [ServiceController::class, 'index_all']);
+    Route::get('/freelancers/{id}', [FreelancerProfileController::class, 'showById']);
     Route::post('/freelancer/services', [ServiceController::class, 'store']);
     Route::put('/freelancer/services/{id}/status', [ServiceController::class, 'updateStatus']);
     Route::delete('/freelancer/services/{id}', [ServiceController::class, 'destroy']);
@@ -63,6 +63,9 @@ Route::middleware('auth:sanctum')->group(function () {
     //proposals
     Route::post('/projects/{project}/proposals', [ProposalController::class, 'store']);
     Route::get('/projects/{project}/proposals', [ProposalController::class, 'index']);
+    Route::get('/client/projects', [ProjectController::class, 'myProjects']);
+    
+
     Route::post('/proposals/{proposal}/accept', [ProposalController::class, 'accept']);
     Route::post('/proposals/{proposal}/reject', [ProposalController::class, 'reject']);
 

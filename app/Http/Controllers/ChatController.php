@@ -15,42 +15,45 @@ class ChatController extends Controller
        List all conversations (chat list)
     ================================================== */
     public function index()
-    {
-        $user = Auth::user();
+        {
+            $user = Auth::user();
 
-        $conversations = Conversation::with([
-                'client.freelancerProfile',
-                'freelancer.freelancerProfile'
-            ])
-            ->where('client_id', $user->id)
-            ->orWhere('freelancer_id', $user->id)
-            ->orderByDesc('last_message_time')
-            ->get();
+            // Fetch conversations where user is client or freelancer
+            $conversations = Conversation::with(['freelancer', 'client'])->where(function ($q) use ($user) {
+                $q->where('client_id', $user->id)
+                ->orWhere('freelancer_id', $user->id);
+            })->orderByDesc('last_message_time')->get();
 
-        $result = $conversations->map(function ($conv) use ($user) {
+            // Map to Flutter JSON structure
+            $result = $conversations->map(function ($conv) use ($user) {
+                // Determine the peer (the other user)
+                $peer = $conv->client_id == $user->id ? $conv->freelancer : $conv->client;
 
-            $otherUser = $conv->client_id === $user->id
-                ? $conv->freelancer
-                : $conv->client;
+                // Get peer profile depending on role
+                $peerProfile = null;
+                if ($peer->role === 'client') {
+                    $peerProfile = $peer->clientProfile;
+                } elseif ($peer->role === 'freelancer') {
+                    $peerProfile = $peer->freelancerProfile;
+                }
 
-            return [
-                'id' => (string) $conv->id,
-                'user' => [
-                    'id' => (string) $otherUser->id,
-                    'name' => $otherUser->freelancerProfile?->full_name ?? 'Unknown',
-                    'avatarUrl' => $otherUser->freelancerProfile?->avatar_url,
-                    'role' => $otherUser->role,
-                ],
-                'lastMessage' => $conv->last_message ?? '',
-                'lastMessageTime' => $conv->last_message_time?->toIso8601String(),
-                'unreadCount' => $conv->client_id === $user->id
-                    ? $conv->client_unread
-                    : $conv->freelancer_unread,
-            ];
-        });
+                return [
+                    'id' => (string)$conv->id,
+                    'peer' => [
+                        'id' => (string)$peer->id,
+                        'name' => $peerProfile->full_name ?? $peer->name ?? 'Unknown',
+                        'avatarUrl' => $peerProfile->avatar_url ?? null,
+                        'isOnline' => true,
+                        'lastSeen' => null,
+                    ],
+                    'lastMessage' => $conv->last_message ?? '',
+                    'lastMessageTime' => $conv->last_message_time?->toIso8601String() ?? now()->toIso8601String(),
+                    'unreadCount' => $conv->client_id == $user->id ? $conv->client_unread : $conv->freelancer_unread,
+                ];
+            });
 
-        return response()->json($result);
-    }
+    return response()->json($result);
+}
 
     /* ==================================================
        POST /conversations/{freelancer}
@@ -98,7 +101,7 @@ class ChatController extends Controller
        Get all messages
     ================================================== */
     public function messages(Conversation $conversation)
-    {
+{
         $user = Auth::user();
 
         if (!in_array($user->id, [$conversation->client_id, $conversation->freelancer_id])) {
@@ -107,19 +110,33 @@ class ChatController extends Controller
 
         $messages = $conversation->messages()->orderBy('timestamp')->get();
 
-        // Reset unread counter
-        if ($conversation->client_id === $user->id) {
-            $conversation->client_unread = 0;
-        } else {
-            $conversation->freelancer_unread = 0;
-        }
-        $conversation->save();
+        
+        // Determine the peer
+        $peer = $conversation->freelancer_id == $user->id ? $conversation->client : $conversation->freelancer;
 
-        return response()->json(
-            $messages->map(fn ($msg) => [
-                'id' => (string) $msg->id,
-                'conversationId' => (string) $msg->conversation_id,
-                'senderId' => (string) $msg->sender_id,
+                    $peerProfile = null;
+            if ($peer->role === 'client') {
+                $peerProfile = $peer->clientProfile;
+            } elseif ($peer->role === 'freelancer') {
+                $peerProfile = $peer->freelancerProfile;
+            }
+
+            $peerName = $peerProfile->full_name ?? 'Unknown';
+            $peerAvatar = $peerProfile->avatar_url ?? null;
+
+        $result = [
+        'peer' => [
+            'id' => (string)$peer->id,
+            'name' => $peerName,          // <-- use the profile name
+            'avatarUrl' => $peerAvatar,   // <-- use the profile avatar
+            'isOnline' => true,
+            'lastSeen' => null,
+        ],
+        'messages' => $messages->map(function ($msg) {
+            return [
+                'id' => (string)$msg->id,
+                'conversationId' => (string)$msg->conversation_id,
+                'senderId' => (string)$msg->sender_id,
                 'senderRole' => $msg->sender_role,
                 'content' => $msg->content,
                 'timestamp' => $msg->timestamp->toIso8601String(),
@@ -129,14 +146,22 @@ class ChatController extends Controller
                 'fileName' => $msg->file_name,
                 'fileSize' => $msg->file_size,
                 'metadata' => $msg->metadata,
-            ])
-        );
+            ];
+        }),
+    ];
+        // Reset unread count
+        if ($conversation->client_id == $user->id) {
+            $conversation->client_unread = 0;
+        } else {
+            $conversation->freelancer_unread = 0;
+        }
+        $conversation->save();
+
+        return response()->json($result);
     }
 
-    /* ==================================================
-       POST /conversations/{conversation}/messages
-       Send a message
-    ================================================== */
+
+    // Send a new message
     public function sendMessage(Request $request, Conversation $conversation)
     {
         $user = Auth::user();
@@ -197,4 +222,51 @@ class ChatController extends Controller
             'metadata' => $message->metadata,
         ]);
     }
+    // Create a new conversation between a client and freelancer
+public function createConversation(Request $request)
+{
+    $user = Auth::user();
+
+    $data = $request->validate([
+        'freelancer_id' => 'required|exists:users,id',
+    ]);
+
+    $freelancerId = $data['freelancer_id'];
+
+    // Prevent user from chatting with themselves
+    if ($freelancerId == $user->id) {
+        return response()->json(['message' => 'Cannot create conversation with yourself'], 400);
+    }
+
+    // Check if conversation already exists
+    $conversation = Conversation::where(function($q) use ($user, $freelancerId) {
+        $q->where('client_id', $user->id)
+          ->where('freelancer_id', $freelancerId);
+    })->orWhere(function($q) use ($user, $freelancerId) {
+        $q->where('client_id', $freelancerId)
+          ->where('freelancer_id', $user->id);
+    })->first();
+
+    if (!$conversation) {
+        // Create new conversation
+        $conversation = Conversation::create([
+            'client_id' => $user->id,
+            'freelancer_id' => $freelancerId,
+            'last_message' => null,
+            'last_message_time' => now(),
+            'client_unread' => 0,
+            'freelancer_unread' => 0,
+        ]);
+    }
+
+        return response()->json([
+        'conversationId' => (string)$conversation->id, // add this line
+        'client_id' => (string)$conversation->client_id,
+        'freelancer_id' => (string)$conversation->freelancer_id,
+        'lastMessage' => $conversation->last_message,
+        'lastMessageTime' => $conversation->last_message_time?->toIso8601String() ?? now()->toIso8601String(),
+        'clientUnread' => $conversation->client_unread,
+        'freelancerUnread' => $conversation->freelancer_unread,
+    ]);
+}
 }
