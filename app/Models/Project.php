@@ -17,14 +17,13 @@ class Project extends Model
         'location',         // new
         'posted_at',        // new
         'category_badge',   // new
-        'proposals_count',  // new
     ];
+
 
     // Automatically cast 'posted_at' to Carbon datetime
     protected $casts = [
     'posted_at' => 'datetime',
     'budget' => 'decimal:2',
-    'proposals_count' => 'integer',
 ];
 
     public function client()
@@ -66,11 +65,7 @@ public function favoritedBy()
         'freelancer_id'
     );
 }
-   public function incrementApplicationsCount(): self
-    {
-        $this->increment('proposals_count');
-        return $this->refresh();
-    }
+  
 
 
 }

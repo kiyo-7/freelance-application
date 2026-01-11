@@ -65,10 +65,16 @@ class ProjectController extends Controller
     /**
      * Show a single project with applications and freelancer info
      */
-    public function show(Project $project)
-    {
-        return $project->load('applications.freelancer', 'client');
-    }
+public function show(Project $project)
+{
+    return response()->json([
+        'data' => $project
+            ->load('proposals.freelancer', 'client')
+            ->loadCount('proposals')
+    ]);
+}
+
+
 
     /**
  * Show all projects of the authenticated client

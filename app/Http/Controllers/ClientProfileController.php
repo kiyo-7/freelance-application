@@ -53,6 +53,7 @@ class ClientProfileController extends Controller
 
         $data = $request->validate([
             'full_name' => 'sometimes|string|max:255',
+            'phone_number' => 'sometimes|string|max:255',
             'location' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
         ]);
