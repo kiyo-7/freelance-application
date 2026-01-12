@@ -57,6 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/freelancer/services', [ServiceController::class, 'index']);
     Route::get('/freelancer/services/all', [ServiceController::class, 'index_all']);
     Route::get('/freelancers/{id}', [FreelancerProfileController::class, 'showById']);
+    Route::get('/freelancers/user/{userId}', [FreelancerProfileController::class, 'showByUserId']);
     Route::post('/freelancer/services', [ServiceController::class, 'store']);
     Route::put('/freelancer/services/{id}/status', [ServiceController::class, 'updateStatus']);
     Route::delete('/freelancer/services/{id}', [ServiceController::class, 'destroy']);
@@ -83,5 +84,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //favorite service routes
       Route::get('/services/favorites', [FavoriteServiceController::class, 'indexFavorites']);
-    Route::post('/services/{serviceId}', [FavoriteServiceController::class, 'toggle']);
+    Route::post('/services/{serviceId}/favorite', [FavoriteServiceController::class, 'toggle']);
 });
