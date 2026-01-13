@@ -47,8 +47,10 @@ class FavoriteServiceController extends Controller
         $user = $request->user();
 
         $services = $user->favoriteServices()
-            ->with('user:id,email') // service owner (freelancer)
-            ->latest('favorite_services.created_at')
+        ->with([
+        'user:id,email',
+        'user.freelancerProfile:id,user_id,full_name,avatar_url,rating'
+    ])            ->latest('favorite_services.created_at')
             ->get()
             ->map(function ($service) {
                 $service->is_favorited = true; // always true here
