@@ -1,9 +1,10 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Proposal;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,17 +19,22 @@ class ProposalController extends Controller
         $user = Auth::user();
 
         if ($user->role !== 'freelancer') {
-            return response()->json(['message' => 'Only freelancers can submit proposals.'], 403);
+            return response()->json([
+                'message' => 'Only freelancers can submit proposals.'
+            ], 403);
         }
 
         $project = Project::where('status', 'open')->findOrFail($projectId);
 
+        // Prevent duplicate proposals
         if (
             Proposal::where('project_id', $project->id)
                 ->where('freelancer_id', $user->id)
                 ->exists()
         ) {
-            return response()->json(['message' => 'Proposal already submitted.'], 422);
+            return response()->json([
+                'message' => 'Proposal already submitted.'
+            ], 422);
         }
 
         $validated = $request->validate([
@@ -46,9 +52,17 @@ class ProposalController extends Controller
             'status'        => 'pending',
         ]);
 
+        // 🔔 Notify client about new proposal
+        Notification::create([
+            'user_id' => $project->client_id,
+            'title'   => 'New Proposal Received',
+            'message' => "{$user->name} has submitted a proposal for your project \"{$project->title}\".",
+            'type'    => 'job',
+        ]);
+
         return response()->json([
             'message' => 'Proposal submitted successfully.',
-            'data' => $proposal,
+            'data'    => $proposal,
         ], 201);
     }
 
@@ -61,15 +75,17 @@ class ProposalController extends Controller
             ->findOrFail($projectId);
 
         if ($project->client_id !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized access.'], 403);
+            return response()->json([
+                'message' => 'Unauthorized access.'
+            ], 403);
         }
 
         return response()->json([
             'data' => $project->proposals()
-            ->with('freelancer.freelancerProfile')
-            ->latest()
-            ->get(),
-]);
+                ->with('freelancer.freelancerProfile')
+                ->latest()
+                ->get(),
+        ]);
     }
 
     /**
@@ -81,19 +97,25 @@ class ProposalController extends Controller
         $project  = $proposal->project;
 
         if ($project->client_id !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized.'], 403);
+            return response()->json([
+                'message' => 'Unauthorized.'
+            ], 403);
         }
 
         if ($project->freelancer_id) {
-            return response()->json(['message' => 'Project already assigned.'], 422);
+            return response()->json([
+                'message' => 'Project already assigned.'
+            ], 422);
         }
 
         DB::transaction(function () use ($proposal, $project) {
 
             // Accept selected proposal
-            $proposal->update(['status' => 'accepted']);
+            $proposal->update([
+                'status' => 'accepted'
+            ]);
 
-            // Reject all others
+            // Reject all other proposals
             Proposal::where('project_id', $project->id)
                 ->where('id', '!=', $proposal->id)
                 ->update(['status' => 'rejected']);
@@ -103,11 +125,19 @@ class ProposalController extends Controller
                 'freelancer_id' => $proposal->freelancer_id,
                 'status'        => 'in_progress',
             ]);
+
+            // 🔔 Notify accepted freelancer
+            Notification::create([
+                'user_id' => $proposal->freelancer_id,
+                'title'   => 'Proposal Accepted 🎉',
+                'message' => "Congratulations! You have been selected for the project \"{$project->title}\".",
+                'type'    => 'job',
+            ]);
         });
 
         return response()->json([
             'message' => 'Proposal accepted and freelancer assigned.',
-            'data' => $proposal,
+            'data'    => $proposal,
         ]);
     }
 
@@ -119,15 +149,23 @@ class ProposalController extends Controller
         $proposal = Proposal::with('project')->findOrFail($proposalId);
 
         if ($proposal->project->client_id !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized.'], 403);
+            return response()->json([
+                'message' => 'Unauthorized.'
+            ], 403);
         }
 
         if ($proposal->status !== 'pending') {
-            return response()->json(['message' => 'Proposal already processed.'], 422);
+            return response()->json([
+                'message' => 'Proposal already processed.'
+            ], 422);
         }
 
-        $proposal->update(['status' => 'rejected']);
+        $proposal->update([
+            'status' => 'rejected'
+        ]);
 
-        return response()->json(['message' => 'Proposal rejected.']);
+        return response()->json([
+            'message' => 'Proposal rejected.'
+        ]);
     }
 }

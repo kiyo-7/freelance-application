@@ -25,7 +25,6 @@ return new class extends Migration
             $table->string('location')->nullable();
             $table->timestamp('posted_at')->useCurrent(); 
             $table->string('category_badge')->nullable();
-            $table->unsignedInteger('proposals_count')->default(0);
 
             $table->foreignId('freelancer_id')
           ->nullable()
