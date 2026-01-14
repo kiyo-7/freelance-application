@@ -79,22 +79,62 @@ class ChatController extends Controller
         return response()->json($conversation, 201);
     }
 
-    /* ==================================================
-       DELETE /conversations/{conversation}
-       Delete a conversation
-    ================================================== */
-    public function destroy(Conversation $conversation)
-    {
-        $user = Auth::user();
+    /**
+ * DELETE /conversations/{conversation}
+ * Delete a conversation with all its messages
+ */
+public function destroy(Conversation $conversation)
+{
+    $user = Auth::user();
 
-        if (!in_array($user->id, [$conversation->client_id, $conversation->freelancer_id])) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
-        $conversation->delete();
-
-        return response()->json(['message' => 'Conversation deleted']);
+    if (!in_array($user->id, [$conversation->client_id, $conversation->freelancer_id])) {
+        return response()->json(['message' => 'Unauthorized'], 403);
     }
+
+    // Delete all messages first
+    $conversation->messages()->delete();
+
+    // Delete conversation
+    $conversation->delete();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Conversation and messages deleted'
+    ]);
+}
+
+
+/**
+ * DELETE /conversations/{conversation}/messages/{message}
+ * Delete a single message
+ */
+public function deleteMessage(Conversation $conversation, Message $message)
+{
+    $user = Auth::user();
+
+    // Check conversation ownership
+    if (!in_array($user->id, [$conversation->client_id, $conversation->freelancer_id])) {
+        return response()->json(['message' => 'Unauthorized'], 403);
+    }
+
+    // Ensure message belongs to this conversation
+    if ($message->conversation_id !== $conversation->id) {
+        return response()->json(['message' => 'Message does not belong to this conversation'], 400);
+    }
+
+    // Optional: only sender can delete their message
+    if ($message->sender_id !== $user->id) {
+        return response()->json(['message' => 'You can only delete your own messages'], 403);
+    }
+
+    $message->delete();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Message deleted'
+    ]);
+}
+
 
     /* ==================================================
        GET /conversations/{conversation}/messages
@@ -269,4 +309,7 @@ public function createConversation(Request $request)
         'freelancerUnread' => $conversation->freelancer_unread,
     ]);
 }
+
+
+    
 }

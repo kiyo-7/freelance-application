@@ -36,12 +36,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/projects', [ProjectController::class, 'store']);
     Route::get('/projects/{project}', [ProjectController::class, 'show']);
     Route::get('/client/projects', [ProjectController::class, 'myProjects']);
+    Route::put('/projects/{project}', [ProjectController::class, 'update']);
+    Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
 
     //chat routes
     Route::get('/conversations', [ChatController::class, 'index']);
     Route::post('/conversations', [ChatController::class, 'createConversation']);
     Route::get('/conversations/{conversation}/messages', [ChatController::class, 'messages']);
     Route::post('/conversations/{conversation}/messages', [ChatController::class, 'sendMessage']);
+    Route::delete('/conversations/{conversation}', [ChatController::class, 'destroy']);
+    Route::delete('/conversations/{conversation}/messages/{message}', [ChatController::class, 'deleteMessage']);
 
     //reviews
     Route::get('/projects/{project}/reviews', [ReviewController::class, 'index']);
@@ -65,8 +69,6 @@ Route::middleware('auth:sanctum')->group(function () {
     //proposals
     Route::post('/projects/{project}/proposals', [ProposalController::class, 'store']);
     Route::get('/projects/{project}/proposals', [ProposalController::class, 'index']);
-    
-
     Route::post('/proposals/{proposal}/accept', [ProposalController::class, 'accept']);
     Route::post('/proposals/{proposal}/reject', [ProposalController::class, 'reject']);
 
@@ -76,13 +78,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 
-    //favorite job routes
-    Route::get('/favorites', [FavoriteProjectController::class, 'index']);
-    Route::post('/favorites', [FavoriteProjectController::class, 'store']);
-    Route::delete('/favorites/{projectId}', [FavoriteProjectController::class, 'destroy']);
-    Route::get('/favorites/{projectId}/check', [FavoriteProjectController::class, 'isFavorited']);
+    // favorite project routes
+    Route::get('/projects/favorites', [FavoriteProjectController::class, 'indexFavorites']);
+    Route::post('/projects/{projectId}/favorite', [FavoriteProjectController::class, 'toggle']);
+
 
     //favorite service routes
-      Route::get('/services/favorites', [FavoriteServiceController::class, 'indexFavorites']);
+    Route::get('/services/favorites', [FavoriteServiceController::class, 'indexFavorites']);
     Route::post('/services/{serviceId}/favorite', [FavoriteServiceController::class, 'toggle']);
 });

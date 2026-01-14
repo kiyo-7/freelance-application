@@ -95,4 +95,60 @@ public function myProjects()
     ]);
 }
 
+/**
+ * Update a project
+ */
+public function update(Request $request, Project $project)
+{
+    $user = Auth::user();
+
+    // Only the project owner can edit
+    if ($project->client_id !== $user->id) {
+        return response()->json([
+            'message' => 'Unauthorized'
+        ], 403);
+    }
+
+    $data = $request->validate([
+        'title' => 'sometimes|required|string|max:255',
+        'description' => 'sometimes|required|string',
+        'budget' => 'sometimes|required|numeric',
+        'location' => 'nullable|string|max:255',
+        'category_badge' => 'nullable|string|max:255',
+        'status' => 'sometimes|in:open,in_progress,completed',
+    ]);
+
+    $project->update($data);
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Project updated successfully',
+        'project' => $project->fresh()->load('client')
+    ]);
+}
+
+
+/**
+ * Delete a project
+ */
+public function destroy(Project $project)
+{
+    $user = Auth::user();
+
+    // Only the project owner can delete
+    if ($project->client_id !== $user->id) {
+        return response()->json([
+            'message' => 'Unauthorized'
+        ], 403);
+    }
+
+    $project->delete();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Project deleted successfully'
+    ]);
+}
+
+
 }

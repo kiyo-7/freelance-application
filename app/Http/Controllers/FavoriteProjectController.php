@@ -2,86 +2,74 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FavoriteProject;
 use App\Models\Project;
 use Illuminate\Http\Request;
 
 class FavoriteProjectController extends Controller
 {
     /**
-     * List all favorite projects for logged-in freelancer
+     * Toggle favorite project
+     * POST /projects/{projectId}/favorite
      */
-    public function index(Request $request)
+    public function toggle(Request $request, $projectId)
     {
         $user = $request->user();
 
         if ($user->role !== 'freelancer') {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            return response()->json([
+                'message' => 'Only freelancers can favorite projects'
+            ], 403);
         }
 
-        $favorites = $user->favoriteProjects()
-            ->with('client') // optional
-            ->latest('favorite_projects.created_at')
-            ->get();
-
-        return response()->json($favorites);
-    }
-
-    /**
-     * Add project to favorites
-     */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'project_id' => 'required|exists:projects,id',
-        ]);
-
-        $user = $request->user();
-
-        if ($user->role !== 'freelancer') {
-            return response()->json(['message' => 'Only freelancers can favorite projects'], 403);
-        }
-
-        $user->favoriteProjects()->syncWithoutDetaching([
-            $request->project_id
-        ]);
-
-        return response()->json([
-            'message' => 'Project added to favorites'
-        ], 201);
-    }
-
-    /**
-     * Remove project from favorites
-     */
-    public function destroy(Request $request, $projectId)
-    {
-        $user = $request->user();
-
-        if ($user->role !== 'freelancer') {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
-        $user->favoriteProjects()->detach($projectId);
-
-        return response()->json([
-            'message' => 'Project removed from favorites'
-        ]);
-    }
-
-    /**
-     * Check if project is favorited
-     */
-    public function isFavorited(Request $request, $projectId)
-    {
-        $user = $request->user();
+        $project = Project::findOrFail($projectId);
 
         $isFavorited = $user->favoriteProjects()
             ->where('project_id', $projectId)
             ->exists();
 
+        if ($isFavorited) {
+            $user->favoriteProjects()->detach($projectId);
+
+            return response()->json([
+                'is_favorited' => false,
+                'message' => 'Project removed from favorites'
+            ]);
+        }
+
+        $user->favoriteProjects()->attach($projectId);
+
         return response()->json([
-            'is_favorited' => $isFavorited
+            'is_favorited' => true,
+            'message' => 'Project added to favorites'
+        ], 201);
+    }
+
+    /**
+     * Get all favorite projects (FV)
+     * GET /projects/favorites
+     */
+    public function indexFavorites(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'freelancer') {
+            return response()->json([
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
+        $projects = $user->favoriteProjects()
+            ->with('client:id,email') // project owner
+            ->latest('favorite_projects.created_at')
+            ->get()
+            ->map(function ($project) {
+                $project->is_favorited = true;
+                return $project;
+            });
+
+        return response()->json([
+            'status' => 200,
+            'data' => $projects
         ]);
     }
 }
