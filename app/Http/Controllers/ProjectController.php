@@ -6,18 +6,39 @@ use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB; // make sure this is at the top of the file
+
 
 class ProjectController extends Controller
 {
+public function index_all()
+{
+    $user = Auth::user();
 
+    $projects = Project::with('client')
+        ->when($user && $user->role === 'freelancer', function ($query) use ($user) {
+            // Check if the logged-in freelancer has favorited each project
+            $query->withExists([
+                'favoritedBy as is_favorited' => function ($q) use ($user) {
+                    $q->where('freelancer_id', $user->id);
+                }
+            ]);
+        })
+        ->when(!$user || $user->role !== 'freelancer', function ($query) {
+            // For non-freelancers or guests, always return false
+            $query->addSelect([
+                'is_favorited' => DB::raw('false')
+            ]);
+        })
+        ->latest()
+        ->get();
 
-    public function index_all()
-    {
-        $projects = Project::with('client')->latest()->get();
-        return response()->json([
-            'status' => 200,
-            'data' => $projects]);
-    }
+    return response()->json([
+        'status' => 200,
+        'data' => $projects
+    ]);
+}
+
 
     /**
      * List all projects with client info

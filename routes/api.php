@@ -29,6 +29,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/freelancer/all', [FreelancerProfileController::class, 'index_all']);
     Route::get('/freelancer/profile', [FreelancerProfileController::class, 'show']);
     Route::put('/freelancer/profile', [FreelancerProfileController::class, 'update']);
+
+      // favorite project routes
+    Route::get('/projects/favorites', [FavoriteProjectController::class, 'indexFavorites']);
+    Route::post('/projects/{projectId}/favorite', [FavoriteProjectController::class, 'toggle']);
+    
    
     //project routes
     Route::get('/projects', [ProjectController::class, 'index']);
@@ -71,16 +76,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/projects/{project}/proposals', [ProposalController::class, 'index']);
     Route::post('/proposals/{proposal}/accept', [ProposalController::class, 'accept']);
     Route::post('/proposals/{proposal}/reject', [ProposalController::class, 'reject']);
+  Route::get('/freelancer/projects',[ProposalController::class, 'acceptedProjects']);
 
     //notifications
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
-
-    // favorite project routes
-    Route::get('/projects/favorites', [FavoriteProjectController::class, 'indexFavorites']);
-    Route::post('/projects/{projectId}/favorite', [FavoriteProjectController::class, 'toggle']);
 
 
     //favorite service routes

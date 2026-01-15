@@ -43,23 +43,31 @@ class FavoriteServiceController extends Controller
      * GET /services/favorites
      */
     public function indexFavorites(Request $request)
-    {
-        $user = $request->user();
+{
+    $user = $request->user();
 
-        $services = $user->favoriteServices()
+    $services = $user->favoriteServices()
         ->with([
-        'user:id,email',
-        'user.freelancerProfile:id,user_id,full_name,avatar_url,rating'
-    ])            ->latest('favorite_services.created_at')
-            ->get()
-            ->map(function ($service) {
-                $service->is_favorited = true; // always true here
-                return $service;
-            });
+            'user:id,email',           // user info
+            'user.freelancerProfile:id,user_id,full_name,avatar_url' // load freelancer profile for full name
+        ])
+        ->latest('favorite_services.created_at')
+        ->get()
+        ->map(function ($service) {
+            $service->is_favorited = true;
 
-        return response()->json([
-            'status' => 200,
-            'data' => $services
-        ]);
-    }
+            // Optional: add full_name directly to user object for easier API use
+            if ($service->user && $service->user->freelancerProfile) {
+                $service->user->full_name = $service->user->freelancerProfile->full_name;
+            }
+
+            return $service;
+        });
+
+    return response()->json([
+        'status' => 200,
+        'data' => $services
+    ]);
+}
+
 }
