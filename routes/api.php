@@ -76,6 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/projects/{project}/proposals', [ProposalController::class, 'index']);
     Route::post('/proposals/{proposal}/accept', [ProposalController::class, 'accept']);
     Route::post('/proposals/{proposal}/reject', [ProposalController::class, 'reject']);
+  Route::get('/freelancer/projects',[ProposalController::class, 'acceptedProjects']);
 
     //notifications
     Route::get('/notifications', [NotificationController::class, 'index']);
